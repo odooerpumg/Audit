@@ -1,0 +1,468 @@
+<odoo>
+	<data>
+		<record id="1view_allocation_check" model="ir.ui.view">
+			<field name="name">Paperless Checking</field>
+			<field name="model">audit.allocation</field>
+			<field name="arch" type="xml">
+				<form string="Paperless Checking Wizard">
+					<header>
+						<button icon="fa-gear" string="Generate" name="choose_audit" type="object" class="oe_highlight"  />
+					</header>
+					<field name="checking_id" invisible="0" />
+					<group>
+						<separator string="Auditor(s)" />
+						<newline/>
+						<field name="audit_ids" nolabel="1"/>
+					</group>
+					<footer>
+					</footer>
+				</form>
+			</field>
+		</record>
+
+		<record id="1action_allocation_check" model="ir.actions.act_window">
+				<field name="name">Generate Auditor(s)</field>
+				<field name="res_model">audit.allocation</field>
+				<field name="type">ir.actions.act_window</field>
+				<field name="view_mode">form</field>
+				<field name="view_id" ref="1view_allocation_check"/>
+				<field name="context">{'default_checking_id': active_id}</field>
+				<field name="target">new</field>
+		</record>
+		<!-- paperless Checking  -->
+		<record model="ir.ui.view" id="1paperless_checking_tree">
+			<field name="name">paperless_checking_tree</field>
+			<field name="model">paperless.checking</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="res_person"/>
+					<field name="department_id"/>
+					<field name="date"/>
+					<field name="bu_id"/>
+					<field name="type_id"/>
+					<!-- <field name="mn_name" />
+					<field name="major_remark" />
+					<field name="minor_remark" /> -->
+				</tree>
+			</field>
+		</record>
+
+		<record model="ir.ui.view" id="1paperless_checking_form">
+			<field name="name">paperless_checking_form</field>
+			<field name="model">paperless.checking</field>
+			<field name="arch" type="xml">
+				<form string="paperless Checking Form">
+					<header>
+						<button name="%(1action_allocation_check)d" type="action" string="Choose Auditor(s)" class="oe_highlight" context="{'default_checking_id': active_id}">
+						</button>
+						
+						<button name="confirm" state="draft" string="Confirm" groups="paperless_checking.group_audit_admin,paperless_checking.group_audit_admin_score" type="object" />
+
+						<button name="fill" state="confirm" string="Fill" groups="paperless_checking.group_audit_user,paperless_checking.group_audit_admin,paperless_checking.group_audit_admin_score" type="object" />
+
+						<button name="approve" state="fill" string="Approve" groups="paperless_checking.group_audit_admin,paperless_checking.group_audit_admin_score" type="object" />
+
+						<button name="draft" state="fill,approve" string="Set to Draft" groups="paperless_checking.group_audit_admin,paperless_checking.group_audit_admin_score" type="object" />
+
+						<field name="state" widget="statusbar" statusbar_visible="draft,confirm,fill,approve"
+						 statusbar_colors='{"confirm":"blue","fill":"blue","approve":"blue"}' />
+					</header>
+					<sheet>
+						<div name="button_box" class="oe_button_box">
+							<button class="oe_stat_button" name="button_checking_entries" string="Auditor(s)" type="object" icon="fa-bars" context="{'checking_id':active_id}" >
+								<field name="chk_count" widget="statinfo" nolabel="1"/>
+							</button>
+						</div>
+						<group>
+							<group>
+								<field name="res_person"/>
+								<field name="department_id"/>
+								<field name="date"/>
+								<field name="bu_id"/>
+							</group>
+							<group>
+								<field name="type_id"/>
+								<field name="import_file" filename="import_fname" />
+								<field name="import_fname" invisible="1" class="oe_inline oe_right" />
+								<field name="score_id" groups="paperless_checking.group_audit_admin,paperless_checking.group_audit_admin_score"/>
+							</group>
+						</group>
+						<notebook>
+							<page name="major_minor" string="Choose Majors Minors" >
+								<field name="mn_ids" nolabel="1">
+									<tree editable="bottom">
+										<field name="name_id"/>
+										<field name="category_id" readonly="1"/>
+										<field name="major" readonly="1"/>
+										<field name="minor" readonly="1"/>
+										<field name="root_cause"/>
+										<field name="audit_remark"/>
+										<field name="cor_action_id"/>
+									</tree>
+								</field>
+							</page>
+						</notebook>
+					</sheet>
+				</form>
+			</field>
+		</record>
+
+		<record id="view_dashboard_calendar" model="ir.ui.view">
+			<field name="name">view.dashboard.calendar</field>
+			<field name="model">paperless.checking</field>
+			<field name="arch" type="xml">
+				<calendar string="Calendar" date_start="date" color="type_id">
+				    <field name="department_id"/>
+				</calendar>
+			</field>
+		</record>
+
+		<record model="ir.actions.act_window" id="1paperless_checking_action_window">
+			<field name="name">Paperless Checking</field>
+			<field name="res_model">paperless.checking</field>
+			<field name="view_mode">calendar,tree,form</field>
+            <field name="view_id" ref="1paperless_checking_tree"/>
+		</record>
+
+		<menuitem name="Paperless Checking Menu" id="1paperless_menu_root" sequence="3" web_icon="paperless_checking,static/description/icon.png"/>
+
+		<menuitem name="Paperless Checking" id="1paperless_checking_menu" action="1paperless_checking_action_window" parent="1paperless_menu_root" sequence="1" />
+		<!-- Major Minor(Visit Type) -->
+
+		<record model="ir.ui.view" id="1paperless_major_minor_tree">
+			<field name="name">paperless_major_minor_tree</field>
+			<field name="model">paperless.major.minor</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="category_id"/>
+					<field name="name_id"/>
+					<field name="major"/>
+					<field name="minor"/>
+				</tree>
+			</field>
+		</record>
+
+		<record model="ir.ui.view" id="1paperless_major_minor_form">
+			<field name="name">paperless_major_minor_form</field>
+			<field name="model">paperless.major.minor</field>
+			<field name="arch" type="xml">
+				<form>
+					<group>
+						<group>
+							<field name="category_id"/>
+							<field name="major"/>
+						</group>
+						<group>
+							<field name="name_id"/>
+							<field name="minor"/>
+						</group>
+					</group>
+				</form>
+			</field>
+		</record>
+
+		<record model="ir.actions.act_window" id="1paperless_major_minor_action_window">
+			<field name="name">Content and Criteria</field>
+			<field name="res_model">paperless.major.minor</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+
+		<menuitem name="Content and Criteria" id="1paperless_contennt_and-Criteria_menu" action="1paperless_major_minor_action_window" parent="1paperless_menu_root" sequence="2" />
+
+		<!-- Print -->
+
+		<record model="ir.ui.view" id="1paperless_print_tree">
+			<field name="name">paperless_print_tree</field>
+			<field name="model">paperless.print</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="bu_id"/>
+					<field name="date"/>
+					<field name="type_id"/>
+				</tree>
+			</field>
+		</record>
+
+		<record model="ir.ui.view" id="1paperless_print_form">
+			<field name="name">paperless_print_form</field>
+			<field name="model">paperless.print</field>
+			<field name="arch" type="xml">
+				<form>
+					<group>
+						<group>
+							<field name="bu_id"/>
+							<field name="date"/>
+						</group>
+						<group>
+							<field name="type_id"/>
+						</group>
+					</group>
+				</form>
+			</field>
+		</record>
+
+		<record model="ir.actions.act_window" id="1paperless_print_action_window">
+			<field name="name">Visit Type</field>
+			<field name="res_model">paperless.print</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+
+		<menuitem name="Print" id="1paperless_print_menu" action="1paperless_print_action_window" parent="1paperless_menu_root" sequence="3" />
+
+		<menuitem name="Configuration" id="1paperless_confg_menu" parent="1paperless_menu_root" sequence="3" />
+		<!-- Employee Xpath -->
+		<record id="view_employee_form_inherit1" model="ir.ui.view">
+			<field name="name">Employees</field>
+			<field name="model">hr.employee</field>
+			<field name="inherit_id" ref="hr.view_employee_form"/>
+			<field name="arch" type="xml">
+				<xpath expr="//field[@name='parent_id']" position="after">
+					<field name="emp_no" />
+				</xpath>
+				<xpath expr="//field[@name='user_id']" position="after">
+					<field name="is_auditor" />
+				</xpath>
+			</field>
+		</record>
+		<!-- End -->
+
+		<!-- Category -->
+		<record id="view_category_tree" model="ir.ui.view">
+			<field name="name">Category</field>
+			<field name="model">paperless.category</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="name" />
+				</tree>
+			</field>
+		</record>
+		<record id="view_category_search" model="ir.ui.view">
+			<field name="name">Category</field>
+			<field name="model">paperless.category</field>
+			<field name="arch" type="xml">
+				<form>
+					<sheet>
+						<group>
+							<field name="name" />
+						</group>
+						<!-- <group>
+						</group> -->
+					</sheet>
+				</form>
+			</field>
+		</record>
+		<record id="action_category" model="ir.actions.act_window">
+			<field name="name">Category</field>
+			<field name="res_model">paperless.category</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="view_mode">tree,form</field>
+			<field eval="False" name="view_id"/>
+			<field name="help" type="html">
+			  <p class="o_view_nocontent_smiling_face">
+				Create a new categroy
+			  </p>
+			</field>
+		</record>
+		<menuitem name="Category" id="conf_category" parent="1paperless_confg_menu" action="action_category" sequence="1" />
+		<!-- Type -->
+		<record id="view_type_tree" model="ir.ui.view">
+			<field name="name">type</field>
+			<field name="model">paperless.type</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="name" />
+				</tree>
+			</field>
+		</record>
+		<record id="view_type_search" model="ir.ui.view">
+			<field name="name">type</field>
+			<field name="model">paperless.type</field>
+			<field name="arch" type="xml">
+				<form>
+					<sheet>
+						<group>
+							<field name="name" />
+						</group>
+						<!-- <group>
+						</group> -->
+					</sheet>
+				</form>
+			</field>
+		</record>
+		<record id="action_type" model="ir.actions.act_window">
+			<field name="name">Type</field>
+			<field name="res_model">paperless.type</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="view_mode">tree,form</field>
+			<field eval="False" name="view_id"/>
+			<field name="help" type="html">
+			  <p class="o_view_nocontent_smiling_face">
+				Create a new categroy
+			  </p>
+			</field>
+		</record>
+		<menuitem name="Type" id="conf_type" parent="1paperless_confg_menu" action="action_type" sequence="2" />
+
+		<!-- BU -->
+		<record id="view_bu_tree" model="ir.ui.view">
+			<field name="name">bu</field>
+			<field name="model">paperless.bu</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="name" />
+				</tree>
+			</field>
+		</record>
+		<record id="view_bu_search" model="ir.ui.view">
+			<field name="name">bu</field>
+			<field name="model">paperless.bu</field>
+			<field name="arch" type="xml">
+				<form>
+					<sheet>
+						<group>
+							<field name="name" />
+						</group>
+						<!-- <group>
+						</group> -->
+					</sheet>
+				</form>
+			</field>
+		</record>
+		<record id="action_bu" model="ir.actions.act_window">
+			<field name="name">BU</field>
+			<field name="res_model">paperless.bu</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="view_mode">tree,form</field>
+			<field eval="False" name="view_id"/>
+			<field name="help" type="html">
+			  <p class="o_view_nocontent_smiling_face">
+				Create a new categroy
+			  </p>
+			</field>
+		</record>
+		<menuitem name="BU" id="conf_bu" parent="1paperless_confg_menu" action="action_bu" sequence="3" />
+
+		<!-- Checking Name -->
+		<record id="view_checking_name_tree" model="ir.ui.view">
+			<field name="name">checking.name</field>
+			<field name="model">paperless.checking.name</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="name" />
+				</tree>
+			</field>
+		</record>
+		<record id="view_checking_name_search" model="ir.ui.view">
+			<field name="name">checking.name</field>
+			<field name="model">paperless.checking.name</field>
+			<field name="arch" type="xml">
+				<form>
+					<sheet>
+						<group>
+							<field name="name" />
+						</group>
+						<!-- <group>
+						</group> -->
+					</sheet>
+				</form>
+			</field>
+		</record>
+		<record id="action_checking_name" model="ir.actions.act_window">
+			<field name="name">Paperless Checking Name</field>
+			<field name="res_model">paperless.checking.name</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="view_mode">tree,form</field>
+			<field eval="False" name="view_id"/>
+			<field name="help" type="html">
+			  <p class="o_view_nocontent_smiling_face">
+				Create a new categroy
+			  </p>
+			</field>
+		</record>
+		<menuitem name="Paperless Checking Name" id="conf_checking_name" parent="1paperless_confg_menu" action="action_checking_name" sequence="4" />
+
+		<!-- Corrective Action -->
+		<record id="view_corrective_action_tree" model="ir.ui.view">
+			<field name="name">corrective_action</field>
+			<field name="model">corrective.action</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="name" />
+					<field name="action_day" />
+				</tree>
+			</field>
+		</record>
+		<record id="view_corrective_action_search" model="ir.ui.view">
+			<field name="name">corrective_action</field>
+			<field name="model">corrective.action</field>
+			<field name="arch" type="xml">
+				<form>
+					<sheet>
+						<group>
+							<field name="name" />
+						</group>
+						<group>
+							<field name="action_day" />
+						</group>
+					</sheet>
+				</form>
+			</field>
+		</record>
+		<record id="action_corrective_action" model="ir.actions.act_window">
+			<field name="name">Paperless Corrective Action</field>
+			<field name="res_model">corrective.action</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="view_mode">tree,form</field>
+			<field eval="False" name="view_id"/>
+			<field name="help" type="html">
+			  <p class="o_view_nocontent_smiling_face">
+				Create a new categroy
+			  </p>
+			</field>
+		</record>
+		<menuitem name="Paperless Corrective Action" id="conf_corrective_action" parent="1paperless_confg_menu" action="action_corrective_action" sequence="5" />
+
+		<!-- Audit Score -->
+		<record id="view_audit_score_tree" model="ir.ui.view">
+			<field name="name">audit_score</field>
+			<field name="model">audit.score</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="name" />
+					<field name="mark" />
+				</tree>
+			</field>
+		</record>
+		<record id="view_audit_score_search" model="ir.ui.view">
+			<field name="name">audit_score</field>
+			<field name="model">audit.score</field>
+			<field name="arch" type="xml">
+				<form>
+					<sheet>
+						<group>
+							<field name="name" />
+						</group>
+						<group>
+							<field name="mark" />
+						</group>
+					</sheet>
+				</form>
+			</field>
+		</record>
+		<record id="action_audit_score" model="ir.actions.act_window">
+			<field name="name">Paperless Corrective Action</field>
+			<field name="res_model">audit.score</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="view_mode">tree,form</field>
+			<field eval="False" name="view_id"/>
+			<field name="help" type="html">
+			  <p class="o_view_nocontent_smiling_face">
+				Create a new categroy
+			  </p>
+			</field>
+		</record>
+		<menuitem name="Paperless Audit Score" id="conf_audit_score" parent="1paperless_confg_menu" action="action_audit_score" groups="paperless_checking.group_audit_admin,paperless_checking.group_audit_admin_score" sequence="6" />
+
+		
+	</data>
+</odoo>
