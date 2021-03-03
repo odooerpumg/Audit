@@ -35,6 +35,7 @@
 			<field name="model">paperless.checking</field>
 			<field name="arch" type="xml">
 				<tree>
+				    <field name="name"/>
 					<field name="res_person"/>
 					<field name="department_id"/>
 					<field name="date"/>
@@ -79,27 +80,49 @@
 								<field name="department_id"/>
 								<field name="date"/>
 								<field name="bu_id"/>
-							</group>
-							<group>
 								<field name="type_id"/>
-								<field name="import_file" filename="import_fname" />
-								<field name="import_fname" invisible="1" class="oe_inline oe_right" />
-								<field name="score_id" groups="paperless_checking.group_audit_admin,paperless_checking.group_audit_admin_score"/>
 							</group>
+							
 						</group>
 						<notebook>
-							<page name="major_minor" string="Choose Majors Minors" >
+							<page name="major_minor" string="Choose Content and Criteria" >
 								<field name="mn_ids" nolabel="1">
 									<tree editable="bottom">
 										<field name="name_id"/>
-										<field name="category_id" readonly="1"/>
-										<field name="major" readonly="1"/>
-										<field name="minor" readonly="1"/>
+										<field name="category_id"/>
+										<field name="major"/>
+										<field name="minor"/>
+										<field name="score_id" />
 										<field name="root_cause"/>
 										<field name="audit_remark"/>
 										<field name="cor_action_id"/>
+										<field name="remark"/>
 									</tree>
 								</field>
+							</page>
+							<page name="attach" string="UpLoad Attachment" >
+								<field name="attach_ids" nolabel="1">
+									<tree editable="bottom">
+									    <field name="name"/>
+										<field name="import_file" filename="import_fname" />
+										<field name="import_fname" invisible="1" class="oe_inline oe_right" />
+									</tree>
+								</field>
+							</page>
+							
+							<page name="attach" string="Criteria for Bonus Calculation" >
+							    <group>
+							        <group>
+							            <field name="doc_sys"/>
+							            <field name="cash"/>
+							            <field name="acc_receive"/>
+							            <field name="stock"/>
+							            <field name="follow_up"/>
+							            <field name="total_control"/>
+							            <button name="calculate" string="Calculate" type="object" />
+							        </group>
+							    </group>
+								
 							</page>
 						</notebook>
 					</sheet>
@@ -244,6 +267,7 @@
 					<sheet>
 						<group>
 							<field name="name" />
+							<field name="code" />
 						</group>
 						<!-- <group>
 						</group> -->

@@ -19,6 +19,7 @@ class paperlessCategory(models.Model):
 	_name = 'paperless.category'
 	
 	name = fields.Char('Name',required=True)
+	code = fields.Char('Code',required=True)
 
 class paperlessType(models.Model):
 	_name = 'paperless.type'
@@ -55,7 +56,6 @@ class paperlessMajorMinor(models.Model):
 		checking_value = {
 			'checking_ids':[(4, self.checking_ids.id)],
 		}
-		print ("..............active id..........",self.checking_ids.id)
 		self.write(checking_value)
 
 	# @api.model
@@ -93,36 +93,18 @@ class paperlessMajorMinor(models.Model):
 	# 	record = super(paperlessMajorMinor, self).write(vals)
 	# 	return record
 
-class paperlessMNLine(models.Model):
-	_name = 'mn.line'
 
-	mn_id = fields.Many2one('paperless.major.minor',string='Major Minors')
-	name_id = fields.Many2one('paperless.checking.name',string='Name',required=True)
-	category_id = fields.Many2one('paperless.category',string='Category',required=True)
-	checking_id = fields.Many2one('paperless.checking',string='paperless Checking')
-	major = fields.Boolean('Major',default=False)
-	minor = fields.Boolean('Minor',default=False)
-	check = fields.Boolean('Check',default=False)
-	audit_remark = fields.Text('Audit Suggestion')
-	cor_action_id = fields.Many2one('corrective.action',string='Corrective Action')
-	root_cause = fields.Text('Root Cause')
-
-	@api.onchange('name_id')
-	def onchange_mn_id(self):
-		mn_ids = self.env['paperless.major.minor'].search([('name_id','=',self.name_id.id)])
-		print('................... mn_ids ',mn_ids)
-		if mn_ids:
-			self.category_id = mn_ids.category_id
-			self.major = mn_ids.major
-			self.minor = mn_ids.minor
 
 class paperlessChecking(models.Model):
 	_name = 'paperless.checking'
-
+	
+	
+	name = fields.Char(string="Name")
 	date = fields.Date('Date', default=fields.Date.today)
 	bu_id = fields.Many2one('paperless.bu',string='BU')
 	type_id = fields.Many2one('paperless.type',string='Type')
 	mn_ids = fields.One2many('mn.line','checking_id',string='Major IDS',store=True)
+	attach_ids = fields.One2many('paperless.attach','paper_id',string='Attachment',store=True)
 	res_person = fields.Char('Responsible Person')
 	department_id = fields.Many2one('hr.department',string='Department')
 	state = fields.Selection([('draft', 'Draft'),
@@ -132,9 +114,23 @@ class paperlessChecking(models.Model):
 
 	import_fname = fields.Char(string='Filename')
 	import_file = fields.Binary(string='File')
-	score_id = fields.Many2one('audit.score',string="Score")
+# 	score_id = fields.Many2one('audit.score',string="Score")
 	chk_count = fields.Integer(string='Checking Count',compute='_compute_activites_count')
+	doc_sys = fields.Float(string='Document & System Control')
+	cash = fields.Float(string='Cash Control')
+	acc_receive = fields.Float(string='Account Receivable Control')
+	stock = fields.Float(string='Stock Control')
+	follow_up = fields.Float(string='Follow up Situation')
+	total_control = fields.Float(string='Total')
 
+	
+	@api.model
+	def create(self, vals):
+		res = super(paperlessChecking,self).create(vals)
+		res.name = 'PC'+str(res.id)
+		return res
+	
+	
 	def button_checking_entries(self):
 		return {
 			'name': _('Checking'),
@@ -165,12 +161,90 @@ class paperlessChecking(models.Model):
 
 	def draft(self):
 		return self.write({'state': 'draft'})
+	
+	def calculate(self):
+		dsc_coutnt = 0
+		t1 = 0
+		cc_count = 0
+		t2 = 0
+		arc_count = 0
+		t3 = 0
+		sc_count = 0
+		t4 = 0
+		fus_count = 0
+		t5 = 0
+		lines = self.env['mn.line'].search([('checking_id', '=', self.id)])
+		for line in lines:
+			if line.category_id.code=='DSC':
+				t1 += line.score_id.mark
+				dsc_coutnt+=1
+				
+			elif line.category_id.code=='CC':
+				t2 += line.score_id.mark
+				cc_count+=1
+			
+			elif line.category_id.code=='ARC':
+				t3 += line.score_id.mark
+				arc_count+=1
+				
+			
+			elif line.category_id.code=='SC':
+				t4 += line.score_id.mark
+				sc_count+=1
+			
+			elif line.category_id.code=='FUS':
+				t5 += line.score_id.mark	
+				fus_count+=1
 		
+		if dsc_coutnt>0:		
+			self.doc_sys = t1/dsc_coutnt
+		if cc_count>0:
+			self.cash = t2/cc_count
+		if arc_count>0:
+			self.acc_receive = t3/arc_count
+		if sc_count>0:
+			self.stock = t4/sc_count
+		if fus_count>0:
+			self.follow_up = t5/fus_count
+		self.total_control = self.doc_sys+self.cash+self.acc_receive+self.stock+self.follow_up	
+		
+class paperlessMNLine(models.Model):
+	_name = 'mn.line'
+
+	mn_id = fields.Many2one('paperless.major.minor',string='Major Minors')
+	name_id = fields.Many2one('paperless.checking.name',string='Name',required=True)
+	category_id = fields.Many2one('paperless.category',string='Category',stored=True)
+	checking_id = fields.Many2one('paperless.checking',string='Paperless Checking',stored=True)
+	major = fields.Boolean('Major',default=False,stored=True)
+	minor = fields.Boolean('Minor',default=False,stored=True)
+	check = fields.Boolean('Check',default=False)
+	audit_remark = fields.Text('Audit Suggestion')
+	cor_action_id = fields.Many2one('corrective.action',string='Corrective Action')
+	root_cause = fields.Text('Root Cause')
+	score_id = fields.Many2one('audit.score',string="Score")
+	remark = fields.Text('Remark')
+
+	@api.onchange('name_id')
+	def onchange_mn_id(self):
+		mn_ids = self.env['paperless.major.minor'].search([('name_id','=',self.name_id.id)])
+		if mn_ids:
+			self.category_id = mn_ids.category_id
+			self.major = mn_ids.major
+			self.minor = mn_ids.minor
+					
 class CorrectiveAction(models.Model):
 	_name = 'corrective.action'
 
 	name = fields.Char('Name')
 	action_day = fields.Float('Action Days')
+
+class Attachment(models.Model):
+	_name = 'paperless.attach'
+	
+	name = fields.Char('Name')
+	paper_id = fields.Many2one('paperless.checking',string='Paperless Checking')
+	import_fname = fields.Char(string='Filename')
+	import_file = fields.Binary(string='File')
 
 class AuditScore(models.Model):
 	_name = 'audit.score'
